@@ -35,7 +35,36 @@ async function run() {
     
     
     
-    bot.start((ctx) => ctx.reply('Welcome'));
+    bot.start(async (ctx) => {
+        if (ctx.chat.type == "private") {
+            let user = ctx.chat;
+            const contactRepository = AppDataSource.getRepository(Contact)
+            
+            let contact: Contact;
+            let existing = await contactRepository.findOne({where: {
+                telegramId:  user.id.toString()
+            }})
+            if (existing){
+                contact = existing;
+            }else {
+                contact = new Contact();
+            }
+            
+            
+            contact.firstName = user.first_name
+            contact.lastName = user.last_name
+            contact.telegramId = user.id.toString()
+            contact.username = user.username
+            let member  = await ctx.getChatMember(user.id);
+            if (member) {
+                contact.language_code = member.user.language_code
+                contact.is_bot = member.user.is_bot
+            }
+            
+            await AppDataSource.manager.save(contact)
+        }
+        ctx.reply('Welcome')
+    });
 
     bot.help((ctx) => {
         ctx.reply('Промо бот от Spacecode\n /subscribe - подписаться на рассылку\n /unsubscribe - отписаться от рассылки')
