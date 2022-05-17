@@ -1,0 +1,31 @@
+version: '3.6'
+
+services:
+  db:
+    image: mariadb
+    restart: unless-stopped
+    volumes: 
+      - ./.server/dbdata:/var/lib/mysql
+      - ./.server/initdb/:/docker-entrypoint-initdb.d/
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+  pma:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MEMORY_LIMIT: "1024M"
+      UPLOAD_LIMIT: "1024M"
+    ports:
+      - 8080:80
+    links:
+      - db:db
